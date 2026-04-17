@@ -83,6 +83,138 @@ The `evals/evals.json` file contains trigger test cases. If you change the skill
 - Update `CHANGELOG.md`.
 - Keep commits small and well-described.
 
+## Commit and release workflow
+
+Use this checklist when you are ready to commit local changes or cut a release tag.
+
+### 1. Inspect the working tree
+
+Start from the repository root:
+
+```bash
+git status
+```
+
+Make sure you understand every modified file before you stage anything. If you only meant to touch one area, review the diff:
+
+```bash
+git diff
+git diff -- CONTRIBUTING.md
+```
+
+### 2. Update docs that travel with the change
+
+Before committing:
+
+- Update `CHANGELOG.md` under `## [Unreleased]`.
+- If the CLI surface changed, update `README.md`.
+- If the skill trigger or workflow changed, update `SKILL.md`.
+- If templates or generated example output changed, update `assets/example/todo-api/` when needed.
+
+### 3. Run local verification
+
+For changes in `scripts/init.py`, templates, or user-facing docs, run the unit tests:
+
+```bash
+python -m unittest -q
+```
+
+If you changed CLI behavior, also run a quick smoke test in a temporary directory so you do not pollute the repository:
+
+```powershell
+$tmp = Join-Path $env:TEMP 'ai-handoff-smoke'
+if (Test-Path $tmp) { Remove-Item -Recurse -Force $tmp }
+New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+python .\scripts\init.py --target $tmp --dry-run --name demo --description x --stage new --as claude
+```
+
+Useful extra checks for recent CLI additions:
+
+```powershell
+python .\scripts\init.py --list-packs
+python .\scripts\init.py --target $tmp --dry-run --name demo --description x --stage new --as claude --domains "foo,bar"
+python .\scripts\init.py --target E:\definitely-not-here-xyz --name demo --description x --stage new --as claude
+```
+
+Expected behavior:
+
+- `python -m unittest -q` ends with `OK`.
+- `--list-packs` prints the available glossary packs.
+- Unknown `--domains` values print one `info:` line on stderr but still complete the dry-run in an empty target.
+- A bad `--target` fails immediately before any interactive prompts.
+
+### 4. Stage deliberately
+
+Stage only the files that belong to the change:
+
+```bash
+git add CONTRIBUTING.md CHANGELOG.md
+```
+
+If the change is larger, prefer explicit paths over `git add .` so unrelated files do not slip into the commit.
+
+### 5. Write a clear commit message
+
+Commit messages should describe the shipped change, not the debugging journey.
+
+Good examples:
+
+- `Document commit and release workflow`
+- `Add embedded glossary pack`
+- `Validate --target before interactive prompts`
+
+Then commit:
+
+```bash
+git commit -m "Document commit and release workflow"
+```
+
+### 6. Tag only after the commit exists
+
+Do not create a release tag on a dirty working tree. First confirm the tree is clean and the new commit is in place:
+
+```bash
+git status
+git log --oneline -1
+```
+
+Then create the version tag:
+
+```bash
+git tag v0.1.1
+```
+
+If you tagged the wrong commit, delete the local tag and recreate it before pushing:
+
+```bash
+git tag -d v0.1.1
+git tag v0.1.1
+```
+
+### 7. Push branch and tag
+
+Push the commit first, then the tag:
+
+```bash
+git push origin <branch-name>
+git push origin v0.1.1
+```
+
+Or push all local tags explicitly if that is your normal workflow:
+
+```bash
+git push origin --tags
+```
+
+### 8. Final release sanity check
+
+Before announcing a release, verify:
+
+- `git status` is clean.
+- `git tag --list` includes the new version.
+- `CHANGELOG.md` matches what actually shipped.
+- The commit referenced by the tag is the one you intended to release.
+
 ## Licensing
 
 Contributions are accepted under the same [MIT License](LICENSE) as the rest of the project.

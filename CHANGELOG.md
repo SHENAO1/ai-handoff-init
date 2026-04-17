@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. Format base
 ### Changed
 - `templates/ai-context/06-session-log.md` entry labels are now bilingual (`完成 / Done`, `进行中 / In progress`, `下一步建议 / Next`, `注意 / Watch out`) to match the canonical format documented in `SKILL.md`. Example project `assets/example/todo-api/.ai-context/06-session-log.md` updated to match.
 - `--target` is now validated immediately after argument parsing, before any interactive prompts — users no longer answer five questions only to be told the target directory is invalid.
+- `CONTRIBUTING.md` now includes a detailed local commit and release workflow, including verification commands, staging guidance, and tag/push steps.
 
 ### Removed
 - Dead `mode` parameter from `detect_conflicts()`.
