@@ -1,5 +1,7 @@
 # ai-handoff-init
 
+English | [简体中文](README.zh-CN.md)
+
 > One-command cross-assistant project context bootstrapper for Claude Code, Codex CLI, GitHub Copilot, and anything else that reads `CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md`.
 >
 > 一键初始化跨 AI 编码助手的共享项目上下文体系。
