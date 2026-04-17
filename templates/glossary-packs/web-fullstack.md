@@ -1,0 +1,14 @@
+## Web / Full-stack
+- **REST**: 基于 HTTP 动词(GET/POST/PUT/DELETE)与资源 URI 的 API 风格。无状态、可缓存。
+- **GraphQL**: 单一端点、客户端声明查询字段的 API 查询语言,天然避免过取/欠取。
+- **JWT** (JSON Web Token): 自包含签名令牌,常用于无状态身份验证,内部含 header / payload / signature 三段。
+- **CORS** (Cross-Origin Resource Sharing): 浏览器跨域请求的安全机制,通过服务端响应头 `Access-Control-Allow-*` 放行。
+- **CSRF** (Cross-Site Request Forgery): 冒用用户已登录身份发起请求的攻击;常用 Same-Site Cookie 或 CSRF token 防御。
+- **ORM** (Object-Relational Mapping): 把数据库行映射为语言对象的抽象层,如 SQLAlchemy、Prisma、TypeORM。
+- **Migration**: schema 变更的可回放脚本,带版本号与 up/down 方向。
+- **SSR** (Server-Side Rendering): 页面在服务器端生成 HTML 返回,首屏快、SEO 友好。
+- **SSG** (Static Site Generation): 构建期生成静态 HTML,运行时零计算,典型如 Next.js `next build`。
+- **Hydration**: SSR/SSG 页面在客户端被 JS 接管交互的过程,不当处理会导致"双重渲染"闪烁。
+- **WebSocket**: 单连接全双工通信协议,握手后脱离 HTTP 语义,常用于推送与实时协作。
+- **Rate limiting**: 按 IP/user/token 限制请求频率,常见算法:token bucket、leaky bucket、sliding window。
+- **Idempotency**: 同一请求重复执行结果不变;对支付/扣款类 API 至关重要,常用 idempotency key 实现。

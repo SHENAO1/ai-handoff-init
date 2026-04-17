@@ -1,0 +1,17 @@
+## GNSS / SDR
+- **BOC** (Binary Offset Carrier): 将基带码与方波副载波相乘,形成频谱分裂的调制方式,常见于现代 GNSS 信号。
+- **Gold code**: 由两组 m-序列模 2 相加生成的伪随机码,互相关性低,用于 CDMA 区分用户。
+- **PCPS** (Parallel Code Phase Search): 基于 FFT 的并行码相位搜索算法,一次搜遍所有码相位。
+- **TDMA** (Time Division Multiple Access): 时分多址,用户按时隙轮流占用信道。
+- **CDMA** (Code Division Multiple Access): 码分多址,用户用不同伪随机码共享同一频段。
+- **PRN** (Pseudo-Random Noise): 伪随机噪声码,GPS 中用于卫星识别与测距。
+- **C/A code** (Coarse/Acquisition code): GPS L1 上 1.023 Mcps、1 ms 周期的粗捕获码。
+- **Doppler**: 发射机与接收机相对运动引起的载波/码频移,捕获时需要搜索。
+- **Coherent integration**: 对复相关值直接累加,相干时间受导航电文翻转限制。
+- **Noncoherent integration**: 对相关值幅度(平方)累加,可延长但有平方损失。
+- **USRP** (Universal Software Radio Peripheral): Ettus 的软件无线电硬件平台,常见型号包括 B210、N310。
+- **IQ modulation**: 用同相(I)与正交(Q)两路实基带信号表示复基带,硬件上是两条物理通路。
+- **Zero-IF / Low-IF**: 零中频/低中频接收架构;零中频直接下变频到基带,受直流偏移与 LO 泄漏影响。
+- **LO leakage**: 本振信号泄漏到 TX/RX 输出,在零中频架构中表现为直流 spur,会污染捕获结果。
+- **IRR** (Image Rejection Ratio): 镜像抑制比,衡量 IQ 两路不匹配带来的镜像频率抑制能力。
+- **BER** (Bit Error Rate): 误比特率,通常需要 10^4 ~ 10^6 比特才能得到统计显著的估计。

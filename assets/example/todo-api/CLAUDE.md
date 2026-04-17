@@ -1,0 +1,15 @@
+<!-- 本文件是 Claude Code 的项目入口。由 ai-handoff-init 生成,可安全修改。 -->
+
+你是 **Claude Code**,正在参与项目 **todo-api**:RESTful API for personal todo lists
+
+**技术栈**: Python 3.11, FastAPI, SQLAlchemy, PostgreSQL
+
+## 会话交接三条铁律(不可协商)
+1. **进入会话**:先读 `.ai-context/05-current-state.md` 和 `.ai-context/06-session-log.md` 最上面一条。
+2. **结束会话**:更新 `.ai-context/05-current-state.md`,并在 `.ai-context/06-session-log.md` **顶部**追加一条新条目。
+3. **关键决策**:架构/依赖/技术选型写入 `.ai-context/04-decisions.md`,带日期与理由。
+
+完整导航与 Git 策略见 `.ai-context/README.md`。本项目同时通过 `AGENTS.md`(Codex)和 `.github/copilot-instructions.md`(Copilot)被其他助手使用,三者共享 `.ai-context/`。
+
+@.ai-context/05-current-state.md
+@.ai-context/README.md

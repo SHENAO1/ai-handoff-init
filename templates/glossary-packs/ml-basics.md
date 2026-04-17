@@ -1,0 +1,15 @@
+## Machine Learning
+- **Epoch**: 一次遍历完整训练集的迭代单位。
+- **Batch size**: 单次梯度更新所用的样本数;过大费显存,过小训练不稳。
+- **Learning rate**: 梯度更新步长;最敏感的超参数之一,常配合 warmup 与 decay 调度。
+- **Overfitting**: 训练损失持续下降但验证损失反弹;模型记住了训练集而非泛化。
+- **Regularization**: 抑制过拟合的手段,如 L1/L2 权重衰减、Dropout、Early stopping。
+- **Gradient clipping**: 把梯度范数截断到阈值,防止爆炸梯度,对 RNN/Transformer 训练常用。
+- **Checkpoint**: 某一训练步的完整模型状态快照(权重+优化器状态),用于断点续训或早停回滚。
+- **Inference**: 训练完成后用模型做预测的阶段;优化目标与训练相反(延迟、吞吐、显存)。
+- **Fine-tuning**: 在预训练模型上继续训练,通常用小学习率、少数据、有时冻结部分层。
+- **LoRA** (Low-Rank Adaptation): 只训练低秩适配矩阵的参数高效 fine-tuning 方法。
+- **Quantization**: 把 FP32/FP16 权重压到 INT8/INT4,换取显存与速度,通常有精度损失。
+- **Embedding**: 把离散 token 映射到稠密向量空间的表示,相似概念在空间中距离近。
+- **Attention**: Query/Key/Value 三元加权机制,Transformer 的核心;自注意力即 Q=K=V 同源。
+- **Context length**: 模型一次能处理的 token 上限;超过需截断或滑窗。

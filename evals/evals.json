@@ -1,0 +1,54 @@
+{
+  "skill_name": "ai-handoff-init",
+  "notes": "Trigger evaluation set. Each prompt tests whether Claude correctly decides to consult the ai-handoff-init skill. Positive cases should trigger the skill; negative cases should NOT. Run via the skill-creator's run_loop.py or by spawning subagents with/without the skill and comparing.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "explicit-chinese-trigger",
+      "prompt": "帮我在这个新项目里初始化 AI 上下文,我平时用 Claude Code 和 Codex 换着用。",
+      "expected_output": "Skill triggers. Claude asks for project name, description, tech stack, stage, and which assistant is running init, then runs scripts/init.py. No hand-written files.",
+      "should_trigger": true,
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "explicit-english-trigger",
+      "prompt": "init ai handoff for this repo please, I'm going to share it between Claude Code and GitHub Copilot",
+      "expected_output": "Skill triggers. Claude recognizes 'init ai handoff' as the explicit phrase, collects inputs, runs the script.",
+      "should_trigger": true,
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "implicit-trigger-quota-pain",
+      "prompt": "我每次切换到 Copilot 都要重新解释一遍项目,Claude Code 的额度又不够用。有没有办法让它们共享一点项目记忆?",
+      "expected_output": "Skill triggers proactively. User didn't say 'init' or 'handoff', but described exactly the problem this skill solves (cross-assistant context loss). Claude should recognize the intent, explain what the skill does in one paragraph, and ask if the user wants to initialize.",
+      "should_trigger": true,
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "implicit-trigger-new-repo-multi-assistant",
+      "prompt": "I'm starting a new Rust project. I'll probably work on it from Claude Code at home and Codex on my work laptop. How should I organize things so I don't lose context?",
+      "expected_output": "Skill triggers. User mentions a new repo AND two assistants AND context-preservation concern — three signals. Claude proposes ai-handoff-init as the answer and offers to run it.",
+      "should_trigger": true,
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "negative-generic-coding-question",
+      "prompt": "帮我写一段 Python 代码,把一个 JSON 文件里的所有 null 字段换成空字符串",
+      "expected_output": "Skill does NOT trigger. This is a plain coding task with no cross-assistant context signal, no mention of multiple tools, no project initialization intent. Claude just writes the code.",
+      "should_trigger": false,
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "negative-existing-context-update",
+      "prompt": "我的 .ai-context/05-current-state.md 里 'In Progress' 下面的条目已经过期了,帮我更新一下",
+      "expected_output": "Skill does NOT trigger for re-initialization. User already has .ai-context/ set up and is asking for a routine update to an existing file. Claude reads the file and edits it directly; does not run init.py.",
+      "should_trigger": false,
+      "files": []
+    }
+  ]
+}
