@@ -97,6 +97,7 @@ python scripts/init.py [options]
   --merge               Only create .ai-context/, leave entry files alone
                         (prints snippets for you to paste manually)
   --dry-run             Show plan without writing files
+  --list-packs          List available glossary packs and exit
   --help                Show this message
 ```
 
@@ -113,6 +114,8 @@ If your project has a non-obvious domain vocabulary, pre-fill the glossary with 
 - `gnss-sdr` — BOC, Gold code, PCPS, PRN, Doppler, USRP, etc.
 
 Example: `--domains "web,ml"` injects both packs.
+
+Run `python scripts/init.py --list-packs` to see the current list grouped by file (aliases like `gnss` / `sdr` → `gnss-sdr.md` are shown together). Unknown keywords are ignored silently; if **none** of the keywords you pass match a pack, the script prints one heads-up on stderr.
 
 Want a pack for your domain? See [CONTRIBUTING.md](CONTRIBUTING.md).
 

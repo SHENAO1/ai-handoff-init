@@ -159,7 +159,7 @@ def build_plan(target: Path, ctx: Dict[str, str], domain_keywords: List[str]) ->
     return plan
 
 
-def detect_conflicts(plan: List[Tuple[Path, str]], mode: str) -> Tuple[List[Path], List[Path]]:
+def detect_conflicts(plan: List[Tuple[Path, str]]) -> Tuple[List[Path], List[Path]]:
     """Split existing destinations into (ai_context_conflicts, entry_conflicts)."""
     ai_ctx_conflicts: List[Path] = []
     entry_conflicts: List[Path] = []
@@ -273,6 +273,22 @@ def print_tree(target: Path, plan: List[Tuple[Path, str]]) -> None:
         print(f"    {r}")
 
 
+def print_available_packs() -> None:
+    """Print the glossary packs that --domains knows about, grouped by file."""
+    # Invert the map: filename -> sorted list of keyword aliases.
+    by_file: Dict[str, List[str]] = {}
+    for kw, fname in GLOSSARY_PACKS.items():
+        by_file.setdefault(fname, []).append(kw)
+
+    print("Available glossary packs (use with --domains):\n")
+    # Sort by filename for stable output; sort aliases within each group too.
+    rows = sorted((sorted(kws), fname) for fname, kws in by_file.items())
+    key_col_width = max(len(", ".join(kws)) for kws, _ in rows)
+    for kws, fname in rows:
+        keys = ", ".join(kws)
+        print(f"  {keys:<{key_col_width}}  ->  {fname}")
+
+
 def print_next_steps(ctx: Dict[str, str], stage: str) -> None:
     print("\nNext steps:")
     print("  1. Read the three handoff rules in .ai-context/README.md")
@@ -325,6 +341,8 @@ Examples:
                         "manual paste into your existing CLAUDE.md/AGENTS.md/etc.")
     p.add_argument("--dry-run", action="store_true",
                    help="print the plan without writing any files")
+    p.add_argument("--list-packs", action="store_true",
+                   help="list available glossary packs and exit")
     p.add_argument("--version", action="version", version="ai-handoff-init 0.1.0")
     return p
 
@@ -333,16 +351,13 @@ SLUG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    # stage/assistant/description are already guaranteed non-empty by the
+    # combination of argparse choices + interactive_fill(). Only check the
+    # constraints neither of them covers: mutex flags and slug format.
     if args.force and args.merge:
         sys.exit("error: --force and --merge are mutually exclusive")
     if not SLUG_RE.match(args.name or ""):
         sys.exit(f"error: project name must match {SLUG_RE.pattern}; got {args.name!r}")
-    if not args.description:
-        sys.exit("error: --description is required")
-    if args.stage not in ("new", "existing"):
-        sys.exit("error: --stage must be 'new' or 'existing'")
-    if args.assistant not in ASSISTANT_DISPLAY:
-        sys.exit("error: --as must be one of claude, codex, copilot")
 
 
 def parse_domain_keywords(raw: Optional[str]) -> List[str]:
@@ -360,6 +375,21 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
+    # Informational flags short-circuit before any validation so users can
+    # always `--list-packs` regardless of target / project state.
+    if args.list_packs:
+        print_available_packs()
+        return 0
+
+    # Validate target early — before prompting the user for anything else.
+    # A broken --target is cheap to detect and annoying to hit after five
+    # interactive prompts.
+    target: Path = args.target.resolve()
+    if not target.exists():
+        sys.exit(f"error: target does not exist: {target}")
+    if not target.is_dir():
+        sys.exit(f"error: target is not a directory: {target}")
+
     # Interactive fallback for any missing required field.
     missing_required = not (args.name and args.description and args.stage and args.assistant)
     if missing_required:
@@ -367,18 +397,25 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     validate_args(args)
 
-    target: Path = args.target.resolve()
-    if not target.exists():
-        sys.exit(f"error: target does not exist: {target}")
-    if not target.is_dir():
-        sys.exit(f"error: target is not a directory: {target}")
-
     ctx = build_context(args)
     domain_keywords = parse_domain_keywords(args.domains)
+
+    # Per-keyword unknowns stay silent (documented design). But if the user
+    # typed some keywords and NONE of them matched, they probably mistyped —
+    # surface one heads-up. Use --list-packs to see valid keys.
+    if domain_keywords and not any(
+        kw.strip().lower() in GLOSSARY_PACKS for kw in domain_keywords
+    ):
+        print(
+            "info: none of --domains keywords matched a built-in pack; "
+            "no glossary will be injected. Run with --list-packs to see options.",
+            file=sys.stderr,
+        )
+
     plan = build_plan(target, ctx, domain_keywords)
 
     # Conflict detection
-    ai_ctx_conflicts, entry_conflicts = detect_conflicts(plan, mode="normal")
+    ai_ctx_conflicts, entry_conflicts = detect_conflicts(plan)
 
     if args.merge:
         # Merge mode: only write .ai-context/, refuse if that exists.

@@ -2,14 +2,14 @@
 
 <!-- 动态文档。每次会话结束在最上方追加一条。**新的在上**。 -->
 
-> **条目格式**:
+> **条目格式 / Entry format**:
 >
 > ```
-> ## YYYY-MM-DD · <助手名>
-> **完成**: ...
-> **进行中**: ...
-> **下一步建议**: ...
-> **注意**: ...
+> ## YYYY-MM-DD · <助手名 / Assistant name>
+> **完成 / Done**: ...
+> **进行中 / In progress**: ...
+> **下一步建议 / Next**: ...
+> **注意 / Watch out**: ...
 > ```
 >
 > **归档规则**:当本文件条目超过 20 条时,把较早的一半移动到 `06-session-log-archive.md`
@@ -20,7 +20,7 @@
 ---
 
 ## {{INIT_DATE}} · {{INIT_ASSISTANT}}
-**完成**: 初始化 `.ai-context/` 目录与三个入口文件(`CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md`),项目骨架已建立。
-**进行中**: —
-**下一步建议**: 填写 `00-overview.md` 的目标与成功标准、`01-architecture.md` 的模块划分,然后开始第一次实质性工作。
-**注意**: 后续每个助手进入会话前,先读本文件**最上方一条** + `05-current-state.md`;会话结束前在本文件**顶部**追加新条目。
+**完成 / Done**: 初始化 `.ai-context/` 目录与三个入口文件(`CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md`),项目骨架已建立。
+**进行中 / In progress**: —
+**下一步建议 / Next**: 填写 `00-overview.md` 的目标与成功标准、`01-architecture.md` 的模块划分,然后开始第一次实质性工作。
+**注意 / Watch out**: 后续每个助手进入会话前,先读本文件**最上方一条** + `05-current-state.md`;会话结束前在本文件**顶部**追加新条目。

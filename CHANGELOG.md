@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- `tests/test_init.py` — 49 stdlib `unittest` cases covering pure helpers (`render`, `load_glossary_injection`, `inject_glossary`, `build_context`, `detect_conflicts`, `build_plan`, `parse_domain_keywords`) and `main()` flow branches (`--dry-run`, `--merge`, `--force`, conflict exit codes, slug validation, target validation).
+- `--list-packs` CLI flag: prints available glossary packs grouped by file, works without any other arguments.
+- Info message on stderr when every `--domains` keyword fails to match a built-in pack (partial misses stay silent, per the documented silent-ignore design).
+
+### Changed
+- `templates/ai-context/06-session-log.md` entry labels are now bilingual (`完成 / Done`, `进行中 / In progress`, `下一步建议 / Next`, `注意 / Watch out`) to match the canonical format documented in `SKILL.md`. Example project `assets/example/todo-api/.ai-context/06-session-log.md` updated to match.
+- `--target` is now validated immediately after argument parsing, before any interactive prompts — users no longer answer five questions only to be told the target directory is invalid.
+
+### Removed
+- Dead `mode` parameter from `detect_conflicts()`.
+- Redundant `validate_args` checks for `--stage`, `--as`, and `--description` — already guaranteed non-empty by `argparse choices` + `interactive_fill()`.
+
 ## [0.1.0] — 2026-04-17
 
 ### Added
