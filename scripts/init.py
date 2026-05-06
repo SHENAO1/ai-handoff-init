@@ -172,6 +172,19 @@ def detect_conflicts(plan: List[Tuple[Path, str]]) -> Tuple[List[Path], List[Pat
     return ai_ctx_conflicts, entry_conflicts
 
 
+def find_existing_ai_context_entries(target: Path) -> List[Path]:
+    """Return existing files under .ai-context/, including non-template files."""
+    ai_context = target / ".ai-context"
+    if not ai_context.exists():
+        return []
+    if ai_context.is_file():
+        return [ai_context]
+    return sorted(
+        (path for path in ai_context.rglob("*") if path.is_file()),
+        key=lambda path: str(path),
+    )
+
+
 def write_plan(plan: List[Tuple[Path, str]], backup_existing: bool) -> List[Path]:
     """Write files to disk. Returns the list of paths actually written."""
     written: List[Path] = []
@@ -189,15 +202,15 @@ def write_plan(plan: List[Tuple[Path, str]], backup_existing: bool) -> List[Path
 
 
 # ----------------------------------------------------------------------------
-# Merge-mode snippet printer
+# Entry-file snippet printer
 # ----------------------------------------------------------------------------
 
 
-def print_merge_snippets(ctx: Dict[str, str]) -> None:
+def print_entry_snippets(ctx: Dict[str, str], heading: str = "ENTRY SNIPPETS") -> None:
     """Print what the user should paste into their existing entry files."""
     print()
     print("=" * 72)
-    print("MERGE MODE — paste these snippets into your existing entry files")
+    print(f"{heading} — paste these snippets into your existing entry files")
     print("=" * 72)
 
     for tmpl_name, dest_rel in ENTRY_FILES:
@@ -319,6 +332,9 @@ Examples:
 
   python init.py --merge --name todo-api ...  # only create .ai-context/,
                                               # print entry-file snippets
+
+  python init.py --print-snippets --name todo-api ...
+                                              # print entry-file snippets only
 """,
     )
     p.add_argument("--target", type=Path, default=Path.cwd(),
@@ -339,6 +355,9 @@ Examples:
     p.add_argument("--merge", action="store_true",
                    help="only create .ai-context/; print entry-file snippets for "
                         "manual paste into your existing CLAUDE.md/AGENTS.md/etc.")
+    p.add_argument("--print-snippets", action="store_true",
+                   help="print rendered CLAUDE.md, AGENTS.md, and Copilot "
+                        "instruction snippets only; write no files")
     p.add_argument("--dry-run", action="store_true",
                    help="print the plan without writing any files")
     p.add_argument("--list-packs", action="store_true",
@@ -356,6 +375,8 @@ def validate_args(args: argparse.Namespace) -> None:
     # constraints neither of them covers: mutex flags and slug format.
     if args.force and args.merge:
         sys.exit("error: --force and --merge are mutually exclusive")
+    if args.print_snippets and (args.force or args.merge or args.dry_run):
+        sys.exit("error: --print-snippets cannot be combined with --force, --merge, or --dry-run")
     if not SLUG_RE.match(args.name or ""):
         sys.exit(f"error: project name must match {SLUG_RE.pattern}; got {args.name!r}")
 
@@ -400,6 +421,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     ctx = build_context(args)
     domain_keywords = parse_domain_keywords(args.domains)
 
+    if args.print_snippets:
+        print_entry_snippets(ctx)
+        return 0
+
     # Per-keyword unknowns stay silent (documented design). But if the user
     # typed some keywords and NONE of them matched, they probably mistyped —
     # surface one heads-up. Use --list-packs to see valid keys.
@@ -416,6 +441,11 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     # Conflict detection
     ai_ctx_conflicts, entry_conflicts = detect_conflicts(plan)
+    seen_ai_ctx_conflicts = set(ai_ctx_conflicts)
+    for path in find_existing_ai_context_entries(target):
+        if path not in seen_ai_ctx_conflicts:
+            ai_ctx_conflicts.append(path)
+            seen_ai_ctx_conflicts.add(path)
 
     if args.merge:
         # Merge mode: only write .ai-context/, refuse if that exists.
@@ -424,6 +454,10 @@ def main(argv: Optional[List[str]] = None) -> int:
                   file=sys.stderr)
             for c in ai_ctx_conflicts:
                 print(f"  {c}", file=sys.stderr)
+            print("       keep the existing .ai-context/ and re-run with --print-snippets",
+                  file=sys.stderr)
+            print("       to print entry-file snippets without writing files.",
+                  file=sys.stderr)
             return 2
         # Filter plan to only .ai-context/ files.
         plan = [(d, c) for (d, c) in plan if ".ai-context" in d.parts]
@@ -434,7 +468,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                   file=sys.stderr)
             print("       move or delete the existing .ai-context/ to re-init,",
                   file=sys.stderr)
-            print("       or re-run with --merge to keep it and only print entry snippets.",
+            print("       or re-run with --print-snippets to keep it and only print",
+                  file=sys.stderr)
+            print("       entry-file snippets without writing files.",
                   file=sys.stderr)
             for c in ai_ctx_conflicts:
                 print(f"  {c}", file=sys.stderr)
@@ -456,7 +492,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         total = sum(len(c.encode("utf-8")) for _, c in plan)
         print(f"\n  total: {len(plan)} files, {total:,} bytes")
         if args.merge:
-            print_merge_snippets(ctx)
+            print_entry_snippets(ctx, heading="MERGE MODE")
         return 0
 
     # Write
@@ -465,7 +501,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     print_tree(target, plan)
 
     if args.merge:
-        print_merge_snippets(ctx)
+        print_entry_snippets(ctx, heading="MERGE MODE")
     else:
         print_next_steps(ctx, args.stage)
 

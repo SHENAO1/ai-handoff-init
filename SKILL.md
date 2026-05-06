@@ -44,7 +44,7 @@ A single user rotates between AI coding assistants — quota limits on one, bett
 **Do NOT trigger on:**
 
 - User only uses one assistant and isn't asking for persistent memory.
-- `.ai-context/` already exists in the target — offer to inspect/update via direct edits, don't re-initialize.
+- `.ai-context/` already exists in the target — offer to inspect/update via direct edits, don't re-initialize. If the user only needs assistant entry-file snippets for the existing context, run `--print-snippets`.
 - Generic "write a README" requests — that's a different task.
 - Generic Python/code questions that happen to mention an AI tool in passing.
 
@@ -80,13 +80,14 @@ Prefer `--dry-run` first to show the plan before writing. Especially important i
 
 Interactive fallback: running `python scripts/init.py` with no args prompts for each field.
 
-### Step 3 — Handle existing entry files
+### Step 3 — Handle existing files and snippet-only output
 
 If the project already has `CLAUDE.md`, `AGENTS.md`, or `.github/copilot-instructions.md`:
 
 - **Default**: script aborts and lists conflicts.
 - `--force`: overwrites, but creates `.bak-YYYYMMDD-HHMMSS` backups first.
-- `--merge` (recommended when user has hand-written entry files): creates only `.ai-context/` and prints the snippets the user needs to add to their existing entry files. Safest option for existing repos.
+- `--merge` (recommended when user has hand-written entry files and no `.ai-context/` yet): creates only `.ai-context/` and prints the snippets the user needs to add to their existing entry files.
+- `--print-snippets` (recommended when `.ai-context/` already exists): renders and prints the `CLAUDE.md`, `AGENTS.md`, and `.github/copilot-instructions.md` snippets only. It writes no files, so it is the safe path when the target already has context files.
 
 Ask the user which mode they want if conflicts exist.
 

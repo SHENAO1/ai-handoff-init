@@ -323,12 +323,32 @@ class TestMainNormalWrite(unittest.TestCase):
             with redirect_stdout(io.StringIO()), redirect_stderr(err):
                 rc = init.main(_base_argv(target))
             self.assertEqual(rc, 2)
-            self.assertIn(".ai-context", err.getvalue())
+            message = err.getvalue()
+            self.assertIn(".ai-context", message)
+            self.assertIn("--print-snippets", message)
+            self.assertNotIn("re-run with --merge", message)
             # Pre-existing file must be untouched.
             self.assertEqual(
                 (target / ".ai-context" / "00-overview.md").read_text(encoding="utf-8"),
                 "old",
             )
+
+    def test_refuses_when_ai_context_has_non_template_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            (target / ".ai-context").mkdir()
+            (target / ".ai-context" / "custom.md").write_text(
+                "existing custom context",
+                encoding="utf-8",
+            )
+            err = io.StringIO()
+            with redirect_stdout(io.StringIO()), redirect_stderr(err):
+                rc = init.main(_base_argv(target))
+            self.assertEqual(rc, 2)
+            message = err.getvalue()
+            self.assertIn("custom.md", message)
+            self.assertIn("--print-snippets", message)
+            self.assertFalse((target / ".ai-context" / "00-overview.md").exists())
 
     def test_refuses_when_entry_file_exists_without_force(self):
         with tempfile.TemporaryDirectory() as d:
@@ -396,7 +416,54 @@ class TestMainMerge(unittest.TestCase):
             with redirect_stdout(io.StringIO()), redirect_stderr(err):
                 rc = init.main(_base_argv(target, ["--merge"]))
             self.assertEqual(rc, 2)
-            self.assertIn(".ai-context", err.getvalue())
+            message = err.getvalue()
+            self.assertIn(".ai-context", message)
+            self.assertIn("--print-snippets", message)
+
+
+class TestMainPrintSnippets(unittest.TestCase):
+    def test_print_snippets_prints_entries_without_writing_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = init.main(_base_argv(target, ["--print-snippets"]))
+            self.assertEqual(rc, 0)
+            out = buf.getvalue()
+            self.assertIn("ENTRY SNIPPETS", out)
+            self.assertIn("CLAUDE.md", out)
+            self.assertIn("AGENTS.md", out)
+            self.assertIn(".github/copilot-instructions.md", out)
+            self.assertFalse((target / ".ai-context").exists())
+            self.assertFalse((target / "CLAUDE.md").exists())
+            self.assertFalse((target / "AGENTS.md").exists())
+            self.assertFalse((target / ".github").exists())
+
+    def test_print_snippets_works_when_ai_context_already_exists(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            (target / ".ai-context").mkdir()
+            (target / ".ai-context" / "00-overview.md").write_text(
+                "existing context",
+                encoding="utf-8",
+            )
+            (target / "CLAUDE.md").write_text("existing entry", encoding="utf-8")
+
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = init.main(_base_argv(target, ["--print-snippets"]))
+
+            self.assertEqual(rc, 0)
+            self.assertIn("CLAUDE.md", buf.getvalue())
+            self.assertEqual(
+                (target / ".ai-context" / "00-overview.md").read_text(encoding="utf-8"),
+                "existing context",
+            )
+            self.assertEqual(
+                (target / "CLAUDE.md").read_text(encoding="utf-8"),
+                "existing entry",
+            )
+            self.assertFalse((target / "AGENTS.md").exists())
 
 
 class TestArgValidation(unittest.TestCase):
@@ -406,6 +473,13 @@ class TestArgValidation(unittest.TestCase):
             with redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit):
                     init.main(_base_argv(target, ["--force", "--merge"]))
+
+    def test_print_snippets_rejects_write_modes(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            with redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    init.main(_base_argv(target, ["--print-snippets", "--merge"]))
 
     def test_invalid_slug_rejected(self):
         with tempfile.TemporaryDirectory() as d:

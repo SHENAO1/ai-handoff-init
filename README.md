@@ -98,14 +98,19 @@ python scripts/init.py [options]
                         Will NOT overwrite existing .ai-context/
   --merge               Only create .ai-context/, leave entry files alone
                         (prints snippets for you to paste manually)
+  --print-snippets      Print rendered entry-file snippets only; write no files
   --dry-run             Show plan without writing files
   --list-packs          List available glossary packs and exit
   --help                Show this message
 ```
 
-## What if my project already has CLAUDE.md or AGENTS.md?
+## Existing projects and conflicts
 
-Run with `--merge`. The script will create `.ai-context/` and print the snippets you need to add to your existing entry files. Nothing gets overwritten.
+If your project already has `CLAUDE.md`, `AGENTS.md`, or `.github/copilot-instructions.md` but does **not** yet have `.ai-context/`, run with `--merge`. The script creates `.ai-context/` and prints the snippets you need to add to your existing entry files.
+
+If your project already has `.ai-context/`, use `--print-snippets` instead. It only renders and prints the `CLAUDE.md`, `AGENTS.md`, and `.github/copilot-instructions.md` snippets. It does not create, overwrite, or back up any files.
+
+Use `--force` only when you explicitly want to overwrite existing entry files. It creates `.bak-YYYYMMDD-HHMMSS` backups first, but still refuses to overwrite an existing `.ai-context/`.
 
 ## Glossary packs
 

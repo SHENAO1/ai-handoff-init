@@ -134,6 +134,7 @@ python scripts/init.py [options]
                         不会覆盖已有 .ai-context/
   --merge               只创建 .ai-context/，不覆盖入口文件
                         会打印需要手动粘贴的片段
+  --print-snippets      只渲染并打印入口文件片段，不写任何文件
   --dry-run             只展示计划，不写文件
   --list-packs          列出可用术语包并退出
   --help                显示帮助
@@ -155,9 +156,9 @@ python .\scripts\init.py --target E:\definitely-not-here-xyz --name demo --descr
 - `--domains "foo,bar"` 会打印一条 `info:`，表示没有任何关键词命中内置 pack
 - 错误的 `--target` 会立刻报错，不会先进入交互提问
 
-## 如果项目里已经有 `CLAUDE.md` 或 `AGENTS.md`
+## 已有项目与冲突处理
 
-这种情况推荐使用 `--merge`：
+如果项目里已经有 `CLAUDE.md`、`AGENTS.md` 或 `.github/copilot-instructions.md`，但还没有 `.ai-context/`，推荐使用 `--merge`：
 
 ```bash
 python scripts/init.py --merge ...
@@ -170,6 +171,14 @@ python scripts/init.py --merge ...
 - 打印应该粘贴到现有 `CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md` 里的片段
 
 这样不会直接覆盖你已经手写过的项目入口说明。
+
+如果项目里已经有 `.ai-context/`，不要用 `--merge`，因为 `--merge` 的职责是创建 `.ai-context/`。这种情况请使用 `--print-snippets`：
+
+```bash
+python scripts/init.py --print-snippets ...
+```
+
+它只会渲染并打印 `CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md` 三段入口内容，不创建、覆盖或备份任何文件。
 
 如果你明确要覆盖现有入口文件，可以改用 `--force`。脚本会先生成 `.bak-时间戳` 备份，再写入新的入口文件；但它依然不会覆盖已有 `.ai-context/`。
 
