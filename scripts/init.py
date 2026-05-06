@@ -362,7 +362,7 @@ Examples:
                    help="print the plan without writing any files")
     p.add_argument("--list-packs", action="store_true",
                    help="list available glossary packs and exit")
-    p.add_argument("--version", action="version", version="ai-handoff-init 0.1.0")
+    p.add_argument("--version", action="version", version="ai-handoff-init 0.1.2")
     return p
 
 

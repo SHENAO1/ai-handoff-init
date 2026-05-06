@@ -106,17 +106,26 @@ git diff -- CONTRIBUTING.md
 
 Before committing:
 
-- Update `CHANGELOG.md` under `## [Unreleased]`.
+- Update `CHANGELOG.md`. Keep unreleased work under `## [Unreleased]`, and before tagging move shipped notes into a dated `## [X.Y.Z]` section.
 - If the CLI surface changed, update `README.md`.
 - If the skill trigger or workflow changed, update `SKILL.md`.
 - If templates or generated example output changed, update `assets/example/todo-api/` when needed.
+- For releases, confirm the `SKILL.md` frontmatter `version`, `python scripts/init.py --version`, and `CHANGELOG.md` release section all agree.
 
 ### 3. Run local verification
 
 For changes in `scripts/init.py`, templates, or user-facing docs, run the unit tests:
 
 ```bash
-python -m unittest -q
+python -m unittest discover -s tests
+```
+
+The test suite includes version consistency coverage for `SKILL.md` and CLI `--version`; run the full discovery command before cutting a tag.
+
+Also run the whitespace check used by CI:
+
+```bash
+git diff --check
 ```
 
 If you changed CLI behavior, also run a quick smoke test in a temporary directory so you do not pollute the repository:
@@ -131,15 +140,20 @@ python .\scripts\init.py --target $tmp --dry-run --name demo --description x --s
 Useful extra checks for recent CLI additions:
 
 ```powershell
+python .\scripts\init.py --version
 python .\scripts\init.py --list-packs
+python .\scripts\init.py --print-snippets --name demo --description x --stage new --as claude
 python .\scripts\init.py --target $tmp --dry-run --name demo --description x --stage new --as claude --domains "foo,bar"
 python .\scripts\init.py --target E:\definitely-not-here-xyz --name demo --description x --stage new --as claude
 ```
 
 Expected behavior:
 
-- `python -m unittest -q` ends with `OK`.
+- `python -m unittest discover -s tests` ends with `OK`.
+- `git diff --check` exits cleanly.
+- `--version` prints the release version, for example `ai-handoff-init 0.1.2`.
 - `--list-packs` prints the available glossary packs.
+- `--print-snippets` prints entry snippets and writes no files.
 - Unknown `--domains` values print one `info:` line on stderr but still complete the dry-run in an empty target.
 - A bad `--target` fails immediately before any interactive prompts.
 
@@ -181,14 +195,16 @@ git log --oneline -1
 Then create the version tag:
 
 ```bash
-git tag v0.1.1
+git tag v0.1.2
 ```
+
+For later releases, replace `v0.1.2` with the intended `vX.Y.Z`.
 
 If you tagged the wrong commit, delete the local tag and recreate it before pushing:
 
 ```bash
-git tag -d v0.1.1
-git tag v0.1.1
+git tag -d v0.1.2
+git tag v0.1.2
 ```
 
 ### 7. Push branch and tag
@@ -197,7 +213,7 @@ Push the commit first, then the tag:
 
 ```bash
 git push origin <branch-name>
-git push origin v0.1.1
+git push origin v0.1.2
 ```
 
 Or push all local tags explicitly if that is your normal workflow:

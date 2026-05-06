@@ -137,6 +137,7 @@ python scripts/init.py [options]
   --print-snippets      只渲染并打印入口文件片段，不写任何文件
   --dry-run             只展示计划，不写文件
   --list-packs          列出可用术语包并退出
+  --version             显示版本并退出
   --help                显示帮助
 ```
 

@@ -101,6 +101,7 @@ python scripts/init.py [options]
   --print-snippets      Print rendered entry-file snippets only; write no files
   --dry-run             Show plan without writing files
   --list-packs          List available glossary packs and exit
+  --version             Show version and exit
   --help                Show this message
 ```
 

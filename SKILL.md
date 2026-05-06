@@ -1,7 +1,7 @@
 ---
 name: ai-handoff-init
 description: Initialize a shared cross-assistant project context system — creates `.ai-context/` directory with 9 structured Markdown files plus thin entry files for Claude Code (`CLAUDE.md`), Codex CLI (`AGENTS.md`), and GitHub Copilot (`.github/copilot-instructions.md`) so that multiple AI coding assistants share the same project memory and can hand off work without the user re-explaining context. Use this skill whenever the user says "初始化 AI 上下文", "创建 AI 交接文件", "init ai handoff", "跨助手上下文", "cross-assistant context", "set up project memory for Claude and Codex", or similar. Also trigger proactively when the user mentions juggling two or more AI coding assistants (any combination of Claude Code, Codex CLI, GitHub Copilot, Cursor, Cline, Gemini), complains about losing context when switching assistants, says they keep re-explaining the project, or starts a fresh repo while mentioning multiple assistants — even if they never say "initialize" or "skill". Recognize the intent, not just the keywords.
-version: 0.1.0
+version: 0.1.2
 ---
 
 # ai-handoff-init

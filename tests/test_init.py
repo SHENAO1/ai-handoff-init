@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -20,6 +21,34 @@ _ROOT = _HERE.parent
 sys.path.insert(0, str(_ROOT / "scripts"))
 
 import init  # noqa: E402
+
+
+EXPECTED_VERSION = "0.1.2"
+
+
+# ----------------------------------------------------------------------------
+# Version consistency tests
+# ----------------------------------------------------------------------------
+
+
+class TestVersionConsistency(unittest.TestCase):
+    def test_cli_version_output(self):
+        result = subprocess.run(
+            [sys.executable, str(_ROOT / "scripts" / "init.py"), "--version"],
+            cwd=str(_ROOT),
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        self.assertEqual(result.stdout.strip(), f"ai-handoff-init {EXPECTED_VERSION}")
+
+    def test_skill_frontmatter_version(self):
+        lines = (_ROOT / "SKILL.md").read_text(encoding="utf-8").splitlines()
+        self.assertGreaterEqual(len(lines), 4)
+        self.assertEqual(lines[0], "---")
+        end = lines.index("---", 1)
+        frontmatter = lines[1:end]
+        self.assertIn(f"version: {EXPECTED_VERSION}", frontmatter)
 
 
 # ----------------------------------------------------------------------------
