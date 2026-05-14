@@ -4,6 +4,10 @@
 
 **技术栈**: Python 3.11, FastAPI, SQLAlchemy, PostgreSQL
 
+## 默认工作方式
+在 `.ai-context/02-conventions.md` 的 AI Autonomy Policy 边界内,优先直接执行用户请求;只有越界、高风险或事实无法从仓库确认时才先问。
+完成用户请求后,用简短最终回复汇报 Done / Changed files / Validation / Next or risks。
+
 ## 会话交接三条铁律(不可协商)
 1. **进入会话**:先读 `.ai-context/05-current-state.md` 和 `.ai-context/06-session-log.md` 最上面一条。
 2. **结束会话**:更新 `.ai-context/05-current-state.md`,并在 `.ai-context/06-session-log.md` **顶部**追加一条新条目。

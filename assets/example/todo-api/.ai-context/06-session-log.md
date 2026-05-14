@@ -1,13 +1,18 @@
 # 06 · 会话日志
 
-<!-- 动态文档。每次会话结束在最上方追加一条。**新的在上**。 -->
+<!-- 动态文档。发生可交接的状态变化时在最上方追加一条。**新的在上**。 -->
 
+> 本文件是给下一位 AI 的 baton;最终回复是给用户的执行回报。两者字段可以相似,但不能互相替代。
+>
 > **条目格式 / Entry format**:
 >
 > ```
 > ## YYYY-MM-DD · <助手名 / Assistant name>
 > **完成 / Done**: ...
 > **进行中 / In progress**: ...
+> **改动文件 / Changed files**: ...
+> **验证 / Validation**: ...
+> **剩余风险 / Remaining risk**: ...
 > **下一步建议 / Next**: ...
 > **注意 / Watch out**: ...
 > ```
@@ -29,6 +34,12 @@
 
 **进行中 / In progress**: `POST /todos` 路由(schema 定义了,落库逻辑没写)
 
+**改动文件 / Changed files**: `00-overview.md`, `01-architecture.md`, `04-decisions.md`, `app/db/models.py`, `alembic/*`, `app/api/todos.py`
+
+**验证 / Validation**: `alembic upgrade head` 本地应用成功;`GET /todos` 手动请求通过。
+
+**剩余风险 / Remaining risk**: `POST /todos` 落库逻辑未完成;JWT 模块还没接;todo 路由测试尚未跑通。
+
 **下一步建议 / Next**:
 - 补完 `POST /todos`,记得给 `owner_id` 用 JWT 注入的 `current_user.id`(虽然 JWT 模块还没接)
 - 开始写测试。conftest 里 fixture 用 `pytest-postgresql` 起临时库更快
@@ -41,6 +52,12 @@
 **完成 / Done**: 初始化 `.ai-context/` 目录与三个入口文件(`CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md`),项目骨架已建立。
 
 **进行中 / In progress**: —
+
+**改动文件 / Changed files**: `.ai-context/*`, `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md`
+
+**验证 / Validation**: 初始化脚本成功写入目标文件。
+
+**剩余风险 / Remaining risk**: `00-overview.md` 和 `01-architecture.md` 仍需根据真实项目补全。
 
 **下一步建议 / Next**: 填写 `00-overview.md` 的目标与成功标准、`01-architecture.md` 的模块划分,然后开始第一次实质性工作。
 

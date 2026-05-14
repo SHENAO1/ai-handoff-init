@@ -1,7 +1,7 @@
 ---
 name: ai-handoff-init
 description: Initialize a shared cross-assistant project context system — creates `.ai-context/` directory with 9 structured Markdown files plus thin entry files for Claude Code (`CLAUDE.md`), Codex CLI (`AGENTS.md`), and GitHub Copilot (`.github/copilot-instructions.md`) so that multiple AI coding assistants share the same project memory and can hand off work without the user re-explaining context. Use this skill whenever the user says "初始化 AI 上下文", "创建 AI 交接文件", "init ai handoff", "跨助手上下文", "cross-assistant context", "set up project memory for Claude and Codex", or similar. Also trigger proactively when the user mentions juggling two or more AI coding assistants (any combination of Claude Code, Codex CLI, GitHub Copilot, Cursor, Cline, Gemini), complains about losing context when switching assistants, says they keep re-explaining the project, or starts a fresh repo while mentioning multiple assistants — even if they never say "initialize" or "skill". Recognize the intent, not just the keywords.
-version: 0.1.2
+version: 0.2.0
 ---
 
 # ai-handoff-init
@@ -24,7 +24,7 @@ A single user rotates between AI coding assistants — quota limits on one, bett
     ├── README.md                   # navigation + git strategy notes
     ├── 00-overview.md              # goals, scope, success (static)
     ├── 01-architecture.md          # modules, data flow, stack (static)
-    ├── 02-conventions.md           # style, naming, testing (static)
+    ├── 02-conventions.md           # style, naming, autonomy policy (static)
     ├── 03-glossary.md              # domain terms (semi-static)
     ├── 04-decisions.md             # ADR log (append-only, dated)
     ├── 05-current-state.md         # DYNAMIC — done / in-progress / next
@@ -117,12 +117,19 @@ These are embedded in all three entry files and in `.ai-context/README.md`. Ever
 2. **On session end**: update `.ai-context/05-current-state.md`, then prepend a new entry to `.ai-context/06-session-log.md` using the canonical format.
 3. **On architectural / dependency / tech-choice decisions**: append to `.ai-context/04-decisions.md` with date and rationale.
 
+Default autonomy is defined in `.ai-context/02-conventions.md`: assistants should act directly inside the policy boundary, and ask first only for out-of-bounds, high-risk, or unverified facts that cannot be resolved from the repository.
+
+After completing a user request, assistants should give a concise final report covering Done, Changed files, Validation, and Next or risks. That final reply is for the user; `06-session-log.md` is the baton for the next assistant, and the two do not replace each other.
+
 ## Canonical session log entry format
 
 ```markdown
 ## YYYY-MM-DD · <Assistant name>
 **完成 / Done**: ...
 **进行中 / In progress**: ...
+**改动文件 / Changed files**: ...
+**验证 / Validation**: ...
+**剩余风险 / Remaining risk**: ...
 **下一步建议 / Next**: ...
 **注意 / Watch out**: ...
 ```

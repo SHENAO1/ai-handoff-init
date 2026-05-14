@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file. Format base
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-14
+
+### Changed
+- Added an explicit AI Autonomy Policy to generated collaboration conventions so assistants know what they can do directly and what requires user confirmation.
+- Expanded current-state and session-log templates with exact next step, validation, changed files, and remaining-risk fields for more actionable handoffs.
+- Updated entry-file templates to tell assistants to act directly inside the autonomy boundary instead of defaulting to repeated clarification.
+- Added completion-report guidance so assistants summarize done work, changed files, validation, and next risks for the user after substantive work.
+
 ## [0.1.2] — 2026-05-06
 
 ### Added

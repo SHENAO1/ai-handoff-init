@@ -6,6 +6,7 @@ English | [简体中文](README.zh-CN.md)
 >
 > 一键初始化跨 AI 编码助手的共享项目上下文体系。
 
+[![Version: 0.2.0](https://img.shields.io/badge/version-0.2.0-blue.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## The problem
@@ -32,7 +33,7 @@ your-project/
     ├── README.md
     ├── 00-overview.md                 # goals, scope, success criteria (static)
     ├── 01-architecture.md             # modules, data flow, stack (static)
-    ├── 02-conventions.md              # code style, naming (static)
+    ├── 02-conventions.md              # code style, autonomy policy (static)
     ├── 03-glossary.md                 # domain terms (semi-static)
     ├── 04-decisions.md                # ADR log (append-only)
     ├── 05-current-state.md            # done / in-progress / next (DYNAMIC)
@@ -45,6 +46,10 @@ Three rules every assistant follows (embedded in every entry file):
 1. **Entering a session** → read `05-current-state.md` and the top entry of `06-session-log.md`.
 2. **Leaving a session** → update `05`, prepend a new entry to `06`.
 3. **Architectural/dependency/tech-choice decision** → append to `04-decisions.md`.
+
+The default autonomy boundary lives in `02-conventions.md`: assistants should act directly inside that boundary, and ask first only for out-of-bounds, high-risk, or unverified facts that cannot be resolved from the repository.
+
+After completing a user request, assistants should give a concise final report covering what was done, changed files, validation, and remaining risks or next steps. That final reply is for the user; `06-session-log.md` is the baton for the next assistant.
 
 That's it. No magic. No daemon. No API calls. Just markdown conventions that any assistant — or any human — can follow.
 
@@ -132,8 +137,10 @@ Want a pack for your domain? See [CONTRIBUTING.md](CONTRIBUTING.md).
 1. **Thin entry files, fat context directory** — `CLAUDE.md` et al. stay under 20 lines to respect Copilot's "short instructions" and Codex's `project_doc_max_bytes` limits. All substance lives in `.ai-context/`.
 2. **Claude Code uses `@` references** — `CLAUDE.md` includes `@.ai-context/05-current-state.md` so Claude auto-loads the state file. Codex and Copilot don't support `@`; they rely on prose instructions.
 3. **Dynamic files stay small** — `05-current-state.md` is a snapshot, not a log. `06-session-log.md` is capped at 20 recent entries (older ones archive to `06-session-log-archive.md`) to avoid hitting Claude Code's 40,000-char memory limit.
-4. **Git-agnostic** — we don't write a `.gitignore`. See `.ai-context/README.md` for commit strategy guidance.
-5. **Domain extensibility** — glossary packs are opt-in, mechanism > content. The skill is domain-neutral by default.
+4. **Autonomy is explicit** — `02-conventions.md` defines what assistants can do directly and what requires user confirmation, so handoffs preserve momentum without hiding risky changes.
+5. **User-facing completion reports** — assistants end substantive work by summarizing done work, changed files, validation, and next risks; this complements, but does not replace, the handoff log.
+6. **Git-agnostic** — we don't write a `.gitignore`. See `.ai-context/README.md` for commit strategy guidance.
+7. **Domain extensibility** — glossary packs are opt-in, mechanism > content. The skill is domain-neutral by default.
 
 ## License
 

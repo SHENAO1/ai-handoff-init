@@ -23,7 +23,7 @@ sys.path.insert(0, str(_ROOT / "scripts"))
 import init  # noqa: E402
 
 
-EXPECTED_VERSION = "0.1.2"
+EXPECTED_VERSION = "0.2.0"
 
 
 # ----------------------------------------------------------------------------
@@ -276,6 +276,82 @@ class TestBuildPlan(unittest.TestCase):
             plan = init.build_plan(target, self._ctx(), [])
             glossary = next(c for p, c in plan if p.name == "03-glossary.md")
             self.assertNotIn(init.GLOSSARY_SLOT, glossary)
+
+
+class TestGeneratedTemplateContracts(unittest.TestCase):
+    """Snapshot-style checks for the generated handoff protocol surface."""
+
+    def _plan_by_relpath(self, target: Path):
+        ctx = {
+            "PROJECT_NAME": "todo-api",
+            "DESCRIPTION": "A todo API",
+            "TECH_STACK_INLINE": "Python",
+            "TECH_STACK_LIST": "- Python",
+            "INIT_DATE": "2026-04-17",
+            "INIT_ASSISTANT": "Claude Code",
+        }
+        return {
+            str(path.relative_to(target)).replace("\\", "/"): content
+            for path, content in init.build_plan(target, ctx, [])
+        }
+
+    def test_entry_files_include_autonomy_boundary_and_stay_short(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            by_path = self._plan_by_relpath(target)
+            for relpath in (
+                "CLAUDE.md",
+                "AGENTS.md",
+                ".github/copilot-instructions.md",
+            ):
+                content = by_path[relpath]
+                self.assertIn("AI Autonomy Policy", content, relpath)
+                self.assertIn("优先直接执行用户请求", content, relpath)
+                self.assertIn("Done / Changed files / Validation / Next or risks", content, relpath)
+                self.assertLessEqual(len(content.splitlines()), 20, relpath)
+
+    def test_conventions_define_autonomy_policy_contract(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            content = self._plan_by_relpath(target)[".ai-context/02-conventions.md"]
+            expected_fragments = (
+                "### AI Autonomy Policy",
+                "默认行动优先",
+                "可以直接执行",
+                "必须先确认",
+                "普通代码改动不因行数触发 ADR",
+                "架构、依赖、公开接口、数据模型、长期流程约定变化",
+                "### Completion Report / Definition of Done",
+                "最终回复必须简短说明:Done / Changed files / Validation / Next or risks",
+                "两者不能互相替代",
+            )
+            for fragment in expected_fragments:
+                self.assertIn(fragment, content)
+
+    def test_current_state_contains_actionable_handoff_fields(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            content = self._plan_by_relpath(target)[".ai-context/05-current-state.md"]
+            for heading in (
+                "## 🎯 Current Goal",
+                "## ⏭️ Next Exact Step",
+                "## 🧪 Validation Command",
+                "## 🤖 Autonomy Notes",
+            ):
+                self.assertIn(heading, content)
+
+    def test_session_log_contains_validation_and_risk_fields(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            content = self._plan_by_relpath(target)[".ai-context/06-session-log.md"]
+            for label in (
+                "**改动文件 / Changed files**",
+                "**验证 / Validation**",
+                "**剩余风险 / Remaining risk**",
+                "本文件是给下一位 AI 的 baton",
+                "最终回复是给用户的执行回报",
+            ):
+                self.assertIn(label, content)
 
 
 # ----------------------------------------------------------------------------

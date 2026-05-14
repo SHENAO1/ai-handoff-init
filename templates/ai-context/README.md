@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | `00-overview.md` | 静态 | 项目目标、范围、成功标准 |
 | `01-architecture.md` | 静态 | 模块、数据流、技术栈 |
-| `02-conventions.md` | 静态 | 代码风格、命名、目录约定 |
+| `02-conventions.md` | 静态 | 代码风格、命名、自主边界 |
 | `03-glossary.md` | 准静态 | 领域术语表 |
 | `04-decisions.md` | 追加型 | ADR 风格决策日志(带日期) |
 | `05-current-state.md` | **动态** | done / in-progress / next |
@@ -23,11 +23,14 @@
 2. **结束会话**:更新 `05-current-state.md`,并在 `06-session-log.md` **顶部**追加一条新条目。
 3. **关键决策**:架构、依赖、技术选型的决定写入 `04-decisions.md`,带日期与理由。
 
+默认行动边界见 `02-conventions.md` 的 AI Autonomy Policy:在授权边界内优先直接执行,只有越界、高风险或事实无法从仓库确认时才先问。
+完成用户请求后,最终回复应简短说明 Done / Changed files / Validation / Next or risks;这是给用户的执行回报,不替代 `06-session-log.md` 的交接记录。
+
 ## 维护原则
 
 - 静态文件(`00` ~ `02`)只在范围或结构发生重大变更时修订。
 - 追加型文件(`04`、`06`)不删除历史条目,作废用标注替代。
-- 动态文件(`05`、`06`)每次会话都应触动。
+- 动态文件(`05`、`06`)在代码、计划、状态或结论发生变化时更新;纯只读问答可不更新。
 - `06-session-log.md` 超过 20 条时,把较早的一半归档到 `06-session-log-archive.md`。
 
 ## Git 策略建议

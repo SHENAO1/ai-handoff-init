@@ -4,6 +4,7 @@
 
 > 为 Claude Code、Codex CLI、GitHub Copilot，以及任何会读取 `CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md` 的助手，提供一键初始化的共享项目上下文体系。
 
+[![Version: 0.2.0](https://img.shields.io/badge/version-0.2.0-blue.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 这是什么
@@ -42,7 +43,7 @@ your-project/
     ├── README.md
     ├── 00-overview.md                 # 目标、范围、成功标准（偏静态）
     ├── 01-architecture.md             # 模块、数据流、技术栈（偏静态）
-    ├── 02-conventions.md              # 代码风格、命名、测试约定（偏静态）
+    ├── 02-conventions.md              # 代码风格、命名、自主边界（偏静态）
     ├── 03-glossary.md                 # 术语表（半静态）
     ├── 04-decisions.md                # 架构决策记录（追加式）
     ├── 05-current-state.md            # 当前状态：已完成 / 进行中 / 下一步（动态）
@@ -55,6 +56,10 @@ your-project/
 1. **进入会话时**：先看 `05-current-state.md` 和 `06-session-log.md` 顶部最新一条。
 2. **结束会话时**：更新 `05`，并在 `06` 顶部追加新的交接记录。
 3. **做出架构 / 依赖 / 技术选择决策时**：把原因和结论记到 `04-decisions.md`。
+
+默认自主边界写在 `02-conventions.md`：助手在边界内应直接执行，只有越界、高风险或无法从仓库确认的事实才先问用户。
+
+每次完成用户请求后，助手应给出简短最终回复，说明做了什么、改了哪些文件、跑了什么验证、剩余风险或下一步。最终回复面向用户；`06-session-log.md` 是给下一位助手的交接 baton。
 
 没有守护进程，没有数据库，没有额外服务。只是所有助手都能读懂的一套 Markdown 约定。
 
@@ -219,8 +224,10 @@ python scripts/init.py --list-packs
 1. **入口文件薄、上下文目录厚**：`CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md` 都尽量控制在 20 行以内，把真正内容放进 `.ai-context/`。
 2. **优先利用 Claude Code 的 `@` 能力**：`CLAUDE.md` 会直接引用 `@.ai-context/05-current-state.md`，让 Claude 自动带入当前状态；Codex 和 Copilot 不支持这个能力，所以靠文字规则补足。
 3. **动态文件要小**：`05-current-state.md` 是快照，不是日志；`06-session-log.md` 只保留最近 20 条，避免 Claude Code 上下文超长。
-4. **不绑 Git 工作流**：脚本不会写 `.gitignore`，是否提交 `.ai-context/` 由项目自行决定。
-5. **术语包是可选扩展**：默认不绑定任何行业，只有在你明确传 `--domains` 时才会注入特定领域术语。
+4. **自主边界显式化**：`02-conventions.md` 说明助手可以直接做什么、什么必须先问，减少无意义请示，同时避免高风险静默改动。
+5. **用户可见的完成回报**：助手结束实质性工作时要说明完成内容、改动文件、验证和下一步风险；它补充但不替代交接日志。
+6. **不绑 Git 工作流**：脚本不会写 `.gitignore`，是否提交 `.ai-context/` 由项目自行决定。
+7. **术语包是可选扩展**：默认不绑定任何行业，只有在你明确传 `--domains` 时才会注入特定领域术语。
 
 ## 许可证
 
