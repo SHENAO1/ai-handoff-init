@@ -4,7 +4,7 @@
 
 > 为 Claude Code、Codex CLI、GitHub Copilot，以及任何会读取 `CLAUDE.md` / `AGENTS.md` / `.github/copilot-instructions.md` 的助手，提供一键初始化的共享项目上下文体系。
 
-[![Version: 0.2.0](https://img.shields.io/badge/version-0.2.0-blue.svg)](CHANGELOG.md)
+[![Version: 0.3.0](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 这是什么
@@ -141,10 +141,29 @@ python scripts/init.py [options]
                         会打印需要手动粘贴的片段
   --print-snippets      只渲染并打印入口文件片段，不写任何文件
   --dry-run             只展示计划，不写文件
+  --doctor              只读检查已有 .ai-context/
+  --upgrade             保守升级已有 .ai-context/
   --list-packs          列出可用术语包并退出
   --version             显示版本并退出
   --help                显示帮助
 ```
+
+## 维护已有上下文
+
+如果项目已经有 `.ai-context/`，可以先用 `--doctor` 检查是否符合当前协议：
+
+```bash
+python scripts/init.py --doctor --target /path/to/your-project
+```
+
+如果需要把旧上下文补齐到当前协议，用 `--upgrade`。推荐先预览：
+
+```bash
+python scripts/init.py --upgrade --target /path/to/your-project --dry-run
+python scripts/init.py --upgrade --target /path/to/your-project
+```
+
+升级模式会在写入前为被修改文件创建 `.bak-YYYYMMDD-HHMMSS` 备份，并且不会重写会话历史。
 
 ## 推荐验证方式
 
@@ -153,6 +172,8 @@ python scripts/init.py [options]
 ```powershell
 python .\scripts\init.py --list-packs
 python .\scripts\init.py --target $tmp --dry-run --name demo --description x --stage new --as claude --domains "foo,bar"
+python .\scripts\init.py --doctor --target $tmp
+python .\scripts\init.py --upgrade --target $tmp --dry-run
 python .\scripts\init.py --target E:\definitely-not-here-xyz --name demo --description x --stage new --as claude
 ```
 
@@ -160,6 +181,8 @@ python .\scripts\init.py --target E:\definitely-not-here-xyz --name demo --descr
 
 - `--list-packs` 会列出当前内置术语包
 - `--domains "foo,bar"` 会打印一条 `info:`，表示没有任何关键词命中内置 pack
+- `--doctor` 对符合当前协议的项目返回通过
+- `--upgrade --dry-run` 只打印计划、不写文件
 - 错误的 `--target` 会立刻报错，不会先进入交互提问
 
 ## 已有项目与冲突处理

@@ -144,6 +144,8 @@ python .\scripts\init.py --version
 python .\scripts\init.py --list-packs
 python .\scripts\init.py --print-snippets --name demo --description x --stage new --as claude
 python .\scripts\init.py --target $tmp --dry-run --name demo --description x --stage new --as claude --domains "foo,bar"
+python .\scripts\init.py --doctor --target $tmp
+python .\scripts\init.py --upgrade --target $tmp --dry-run
 python .\scripts\init.py --target E:\definitely-not-here-xyz --name demo --description x --stage new --as claude
 ```
 
@@ -151,9 +153,11 @@ Expected behavior:
 
 - `python -m unittest discover -s tests` ends with `OK`.
 - `git diff --check` exits cleanly.
-- `--version` prints the release version, for example `ai-handoff-init 0.2.0`.
+- `--version` prints the release version, for example `ai-handoff-init 0.3.0`.
 - `--list-packs` prints the available glossary packs.
 - `--print-snippets` prints entry snippets and writes no files.
+- `--doctor` reports OK for a freshly generated current-protocol context.
+- `--upgrade --dry-run` previews upgrades and writes no files.
 - Unknown `--domains` values print one `info:` line on stderr but still complete the dry-run in an empty target.
 - A bad `--target` fails immediately before any interactive prompts.
 
@@ -195,16 +199,16 @@ git log --oneline -1
 Then create the version tag:
 
 ```bash
-git tag v0.2.0
+git tag v0.3.0
 ```
 
-For later releases, replace `v0.2.0` with the intended `vX.Y.Z`.
+For later releases, replace `v0.3.0` with the intended `vX.Y.Z`.
 
 If you tagged the wrong commit, delete the local tag and recreate it before pushing:
 
 ```bash
-git tag -d v0.2.0
-git tag v0.2.0
+git tag -d v0.3.0
+git tag v0.3.0
 ```
 
 ### 7. Push branch and tag
@@ -213,7 +217,7 @@ Push the commit first, then the tag:
 
 ```bash
 git push origin <branch-name>
-git push origin v0.2.0
+git push origin v0.3.0
 ```
 
 Or push all local tags explicitly if that is your normal workflow:

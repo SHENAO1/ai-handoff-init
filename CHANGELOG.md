@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file. Format base
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-05-14
+
+### Added
+- `--doctor` CLI mode for read-only checks of existing `.ai-context/` files, entry files, protocol markers, autonomy policy, completion-report guidance, and handoff fields.
+- `--upgrade` CLI mode for conservative, idempotent upgrades of existing context files with per-file backups before writes.
+- `ai-handoff-init protocol: 0.3.0` marker in generated `.ai-context/README.md` files so future checks can identify the installed context protocol.
+
 ## [0.2.0] — 2026-05-14
 
 ### Changed

@@ -1,7 +1,7 @@
 ---
 name: ai-handoff-init
 description: Initialize a shared cross-assistant project context system — creates `.ai-context/` directory with 9 structured Markdown files plus thin entry files for Claude Code (`CLAUDE.md`), Codex CLI (`AGENTS.md`), and GitHub Copilot (`.github/copilot-instructions.md`) so that multiple AI coding assistants share the same project memory and can hand off work without the user re-explaining context. Use this skill whenever the user says "初始化 AI 上下文", "创建 AI 交接文件", "init ai handoff", "跨助手上下文", "cross-assistant context", "set up project memory for Claude and Codex", or similar. Also trigger proactively when the user mentions juggling two or more AI coding assistants (any combination of Claude Code, Codex CLI, GitHub Copilot, Cursor, Cline, Gemini), complains about losing context when switching assistants, says they keep re-explaining the project, or starts a fresh repo while mentioning multiple assistants — even if they never say "initialize" or "skill". Recognize the intent, not just the keywords.
-version: 0.2.0
+version: 0.3.0
 ---
 
 # ai-handoff-init
@@ -88,6 +88,8 @@ If the project already has `CLAUDE.md`, `AGENTS.md`, or `.github/copilot-instruc
 - `--force`: overwrites, but creates `.bak-YYYYMMDD-HHMMSS` backups first.
 - `--merge` (recommended when user has hand-written entry files and no `.ai-context/` yet): creates only `.ai-context/` and prints the snippets the user needs to add to their existing entry files.
 - `--print-snippets` (recommended when `.ai-context/` already exists): renders and prints the `CLAUDE.md`, `AGENTS.md`, and `.github/copilot-instructions.md` snippets only. It writes no files, so it is the safe path when the target already has context files.
+- `--doctor` (recommended before changing an existing context): checks whether `.ai-context/` and entry files match the current protocol without writing files.
+- `--upgrade` (recommended for older contexts): conservatively inserts missing protocol guidance, creates backups before writes, and does not rewrite session history. Preview with `--upgrade --dry-run`.
 
 Ask the user which mode they want if conflicts exist.
 
@@ -146,6 +148,7 @@ Newer entries go on top. When `06-session-log.md` exceeds 20 entries, archive th
 | `{{TECH_STACK_LIST}}` | `- Python 3.11\n- FastAPI\n- PostgreSQL` | `01-architecture.md` (Markdown list) |
 | `{{INIT_DATE}}` | `2026-04-17` | `05`, `06` |
 | `{{INIT_ASSISTANT}}` | `Claude Code` / `Codex` / `GitHub Copilot` | `05`, `06` |
+| `{{CONTEXT_PROTOCOL_VERSION}}` | `0.3.0` | `.ai-context/README.md` |
 
 ## Domain glossary extension
 

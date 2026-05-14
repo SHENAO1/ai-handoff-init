@@ -23,7 +23,7 @@ sys.path.insert(0, str(_ROOT / "scripts"))
 import init  # noqa: E402
 
 
-EXPECTED_VERSION = "0.2.0"
+EXPECTED_VERSION = "0.3.0"
 
 
 # ----------------------------------------------------------------------------
@@ -191,6 +191,10 @@ class TestBuildContext(unittest.TestCase):
         self.assertEqual(ctx["PROJECT_NAME"], "x")
         self.assertEqual(ctx["DESCRIPTION"], "desc")
 
+    def test_protocol_version_passed_through(self):
+        ctx = init.build_context(self._args())
+        self.assertEqual(ctx["CONTEXT_PROTOCOL_VERSION"], init.CONTEXT_PROTOCOL_VERSION)
+
 
 class TestDetectConflicts(unittest.TestCase):
     def test_no_conflicts_on_empty_dir(self):
@@ -231,6 +235,7 @@ class TestBuildPlan(unittest.TestCase):
             "TECH_STACK_LIST": "- Python",
             "INIT_DATE": "2026-04-17",
             "INIT_ASSISTANT": "Claude Code",
+            "CONTEXT_PROTOCOL_VERSION": init.CONTEXT_PROTOCOL_VERSION,
         }
 
     def test_plan_includes_all_ai_context_files(self):
@@ -289,6 +294,7 @@ class TestGeneratedTemplateContracts(unittest.TestCase):
             "TECH_STACK_LIST": "- Python",
             "INIT_DATE": "2026-04-17",
             "INIT_ASSISTANT": "Claude Code",
+            "CONTEXT_PROTOCOL_VERSION": init.CONTEXT_PROTOCOL_VERSION,
         }
         return {
             str(path.relative_to(target)).replace("\\", "/"): content
@@ -339,6 +345,12 @@ class TestGeneratedTemplateContracts(unittest.TestCase):
                 "## 🤖 Autonomy Notes",
             ):
                 self.assertIn(heading, content)
+
+    def test_context_readme_contains_protocol_marker(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            content = self._plan_by_relpath(target)[".ai-context/README.md"]
+            self.assertIn("ai-handoff-init protocol: 0.3.0", content)
 
     def test_session_log_contains_validation_and_risk_fields(self):
         with tempfile.TemporaryDirectory() as d:
@@ -571,6 +583,145 @@ class TestMainPrintSnippets(unittest.TestCase):
             self.assertFalse((target / "AGENTS.md").exists())
 
 
+def _write_legacy_context(target: Path):
+    ai = target / ".ai-context"
+    ai.mkdir()
+    (ai / "README.md").write_text(
+        "# .ai-context/\n\nold navigation\n\n## 文件导航\nold table\n",
+        encoding="utf-8",
+    )
+    (ai / "02-conventions.md").write_text(
+        "# 02\n\n## AI 助手协作约定\n- old user-specific rule\n",
+        encoding="utf-8",
+    )
+    (ai / "05-current-state.md").write_text(
+        "# 05\n\n## ✅ Done\n- existing done\n\n## ⏭️ Next\n- existing next\n\n## ⚠️ Blocked\n- none\n",
+        encoding="utf-8",
+    )
+    (ai / "06-session-log.md").write_text(
+        "# 06\n\n> **条目格式 / Entry format**:\n>\n> ```\n"
+        "> ## YYYY-MM-DD · <助手名 / Assistant name>\n"
+        "> **完成 / Done**: ...\n"
+        "> **进行中 / In progress**: ...\n"
+        "> **下一步建议 / Next**: ...\n"
+        "> **注意 / Watch out**: ...\n"
+        "> ```\n\n"
+        "## 2026-01-01 · Codex\n"
+        "**完成 / Done**: legacy session history\n",
+        encoding="utf-8",
+    )
+    for relpath in ("CLAUDE.md", "AGENTS.md", ".github/copilot-instructions.md"):
+        path = target / relpath
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "# Entry\n\n**技术栈**: Python\n\n## 会话交接三条铁律(不可协商)\n"
+            "1. **进入会话**:old rule\n",
+            encoding="utf-8",
+        )
+
+
+class TestMainDoctor(unittest.TestCase):
+    def test_doctor_generated_context_ok(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            with redirect_stdout(io.StringIO()):
+                init.main(_base_argv(target))
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = init.main(["--target", str(target), "--doctor"])
+            self.assertEqual(rc, 0)
+            out = buf.getvalue()
+            self.assertIn("OK:", out)
+            self.assertIn("MISSING:\n  - (none)", out)
+            self.assertIn("OUTDATED:\n  - (none)", out)
+
+    def test_doctor_missing_context_returns_1_without_project_metadata(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = init.main(["--target", str(target), "--doctor"])
+            self.assertEqual(rc, 1)
+            self.assertIn(".ai-context/", buf.getvalue())
+
+    def test_doctor_outdated_protocol_returns_1(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            with redirect_stdout(io.StringIO()):
+                init.main(_base_argv(target))
+            path = target / ".ai-context" / "02-conventions.md"
+            text = path.read_text(encoding="utf-8").replace("AI Autonomy Policy", "AI Policy")
+            path.write_text(text, encoding="utf-8")
+
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = init.main(["--target", str(target), "--doctor"])
+            self.assertEqual(rc, 1)
+            self.assertIn("OUTDATED:", buf.getvalue())
+            self.assertIn("AI Autonomy Policy", buf.getvalue())
+
+
+class TestMainUpgrade(unittest.TestCase):
+    def test_upgrade_refuses_without_ai_context(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            err = io.StringIO()
+            with redirect_stdout(io.StringIO()), redirect_stderr(err):
+                rc = init.main(["--target", str(target), "--upgrade"])
+            self.assertEqual(rc, 2)
+            self.assertIn(".ai-context/ not found", err.getvalue())
+
+    def test_upgrade_dry_run_does_not_write(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            _write_legacy_context(target)
+            before = (target / ".ai-context" / "02-conventions.md").read_text(encoding="utf-8")
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = init.main(["--target", str(target), "--upgrade", "--dry-run"])
+            self.assertEqual(rc, 0)
+            self.assertIn("[upgrade dry-run]", buf.getvalue())
+            self.assertEqual(
+                (target / ".ai-context" / "02-conventions.md").read_text(encoding="utf-8"),
+                before,
+            )
+            self.assertEqual(list(target.rglob("*.bak-*")), [])
+
+    def test_upgrade_patches_legacy_context_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            _write_legacy_context(target)
+
+            with redirect_stdout(io.StringIO()):
+                rc = init.main(["--target", str(target), "--upgrade"])
+            self.assertEqual(rc, 0)
+
+            conventions = (target / ".ai-context" / "02-conventions.md").read_text(
+                encoding="utf-8"
+            )
+            session_log = (target / ".ai-context" / "06-session-log.md").read_text(
+                encoding="utf-8"
+            )
+            entry = (target / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertIn("old user-specific rule", conventions)
+            self.assertIn("AI Autonomy Policy", conventions)
+            self.assertIn("Completion Report / Definition of Done", conventions)
+            self.assertIn("legacy session history", session_log)
+            self.assertIn("本文件是给下一位 AI 的 baton", session_log)
+            self.assertIn("**改动文件 / Changed files**", session_log)
+            self.assertIn("Done / Changed files / Validation / Next or risks", entry)
+
+            backups = list(target.rglob("*.bak-*"))
+            self.assertGreaterEqual(len(backups), 1)
+
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = init.main(["--target", str(target), "--upgrade"])
+            self.assertEqual(rc, 0)
+            self.assertIn("up to date", buf.getvalue())
+            self.assertEqual(len(list(target.rglob("*.bak-*"))), len(backups))
+
+
 class TestArgValidation(unittest.TestCase):
     def test_force_and_merge_mutually_exclusive(self):
         with tempfile.TemporaryDirectory() as d:
@@ -585,6 +736,20 @@ class TestArgValidation(unittest.TestCase):
             with redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit):
                     init.main(_base_argv(target, ["--print-snippets", "--merge"]))
+
+    def test_doctor_rejects_init_metadata(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            with redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    init.main(["--target", str(target), "--doctor", "--name", "demo"])
+
+    def test_upgrade_allows_only_dry_run_as_extra_flag(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            with redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    init.main(["--target", str(target), "--upgrade", "--merge"])
 
     def test_invalid_slug_rejected(self):
         with tempfile.TemporaryDirectory() as d:

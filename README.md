@@ -6,7 +6,7 @@ English | [简体中文](README.zh-CN.md)
 >
 > 一键初始化跨 AI 编码助手的共享项目上下文体系。
 
-[![Version: 0.2.0](https://img.shields.io/badge/version-0.2.0-blue.svg)](CHANGELOG.md)
+[![Version: 0.3.0](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## The problem
@@ -105,10 +105,29 @@ python scripts/init.py [options]
                         (prints snippets for you to paste manually)
   --print-snippets      Print rendered entry-file snippets only; write no files
   --dry-run             Show plan without writing files
+  --doctor              Check an existing .ai-context/ without writing files
+  --upgrade             Conservatively upgrade an existing .ai-context/
   --list-packs          List available glossary packs and exit
   --version             Show version and exit
   --help                Show this message
 ```
+
+## Maintaining existing context
+
+Use `--doctor` when a project already has `.ai-context/` and you want to check whether it matches the current protocol:
+
+```bash
+python scripts/init.py --doctor --target /path/to/your-project
+```
+
+Use `--upgrade` to conservatively add missing protocol rules to an existing context. Preview first:
+
+```bash
+python scripts/init.py --upgrade --target /path/to/your-project --dry-run
+python scripts/init.py --upgrade --target /path/to/your-project
+```
+
+Upgrade mode creates `.bak-YYYYMMDD-HHMMSS` backups for files it changes and does not rewrite session history.
 
 ## Existing projects and conflicts
 
@@ -129,6 +148,13 @@ If your project has a non-obvious domain vocabulary, pre-fill the glossary with 
 Example: `--domains "web,ml"` injects both packs.
 
 Run `python scripts/init.py --list-packs` to see the current list grouped by file (aliases like `gnss` / `sdr` → `gnss-sdr.md` are shown together). Unknown keywords are ignored silently; if **none** of the keywords you pass match a pack, the script prints one heads-up on stderr.
+
+Useful maintenance smoke tests:
+
+```powershell
+python .\scripts\init.py --doctor --target $tmp
+python .\scripts\init.py --upgrade --target $tmp --dry-run
+```
 
 Want a pack for your domain? See [CONTRIBUTING.md](CONTRIBUTING.md).
 

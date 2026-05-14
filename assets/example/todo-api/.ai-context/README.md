@@ -4,6 +4,8 @@
 项目根目录下的 `CLAUDE.md`、`AGENTS.md`、`.github/copilot-instructions.md` 是各助手的入口,
 它们都指向本目录。
 
+ai-handoff-init protocol: 0.3.0
+
 ## 文件导航
 
 | 文件 | 性质 | 用途 |
