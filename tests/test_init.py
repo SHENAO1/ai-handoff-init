@@ -538,6 +538,128 @@ class TestMainMerge(unittest.TestCase):
             self.assertIn("--print-snippets", message)
 
 
+class TestMainAdopt(unittest.TestCase):
+    def test_adopt_imports_existing_entries_moves_backups_and_replaces_entries(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            (target / "CLAUDE.md").write_text("legacy claude rule", encoding="utf-8")
+            (target / "AGENTS.md").write_text("legacy agents rule", encoding="utf-8")
+
+            with redirect_stdout(io.StringIO()):
+                rc = init.main(_base_argv(target, ["--adopt"]))
+
+            self.assertEqual(rc, 0)
+
+            adopted = (target / ".ai-context" / "09-adopted-instructions.md").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("legacy claude rule", adopted)
+            self.assertIn("legacy agents rule", adopted)
+            self.assertIn("Conflict Priority", adopted)
+
+            claude = (target / "CLAUDE.md").read_text(encoding="utf-8")
+            agents = (target / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertIn("todo-api", claude)
+            self.assertIn("你是 **Codex**", agents)
+            self.assertNotIn("legacy claude rule", claude)
+            self.assertNotIn("legacy agents rule", agents)
+
+            backup_root = target / ".ai-context" / "adopted-entry-backups"
+            claude_backups = list(backup_root.glob("*/CLAUDE.md"))
+            agents_backups = list(backup_root.glob("*/AGENTS.md"))
+            self.assertEqual(len(claude_backups), 1)
+            self.assertEqual(len(agents_backups), 1)
+            self.assertEqual(claude_backups[0].read_text(encoding="utf-8"), "legacy claude rule")
+            self.assertEqual(agents_backups[0].read_text(encoding="utf-8"), "legacy agents rule")
+            manifest = next(backup_root.glob("*/MANIFEST.md")).read_text(encoding="utf-8")
+            self.assertIn("CLAUDE.md", manifest)
+            self.assertIn("AGENTS.md", manifest)
+
+            readme = (target / ".ai-context" / "README.md").read_text(encoding="utf-8")
+            current = (target / ".ai-context" / "05-current-state.md").read_text(
+                encoding="utf-8"
+            )
+            session = (target / ".ai-context" / "06-session-log.md").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("09-adopted-instructions.md", readme)
+            self.assertIn("已收编已有 AI 助手入口文件", current)
+            self.assertIn("09-adopted-instructions.md", session)
+            self.assertIn("adopted-entry-backups", session)
+
+    def test_adopt_supports_singular_agent_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            (target / "AGENT.md").write_text("legacy singular agent rule", encoding="utf-8")
+
+            with redirect_stdout(io.StringIO()):
+                rc = init.main(_base_argv(target, ["--adopt"]))
+
+            self.assertEqual(rc, 0)
+            self.assertFalse((target / "AGENT.md").exists())
+            self.assertTrue((target / "AGENTS.md").exists())
+            adopted = (target / ".ai-context" / "09-adopted-instructions.md").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("AGENT.md", adopted)
+            self.assertIn("legacy singular agent rule", adopted)
+            backups = list((target / ".ai-context" / "adopted-entry-backups").glob("*/AGENT.md"))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual(backups[0].read_text(encoding="utf-8"), "legacy singular agent rule")
+
+    def test_adopt_dry_run_does_not_write_or_move(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            (target / "CLAUDE.md").write_text("legacy claude rule", encoding="utf-8")
+
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = init.main(_base_argv(target, ["--adopt", "--dry-run"]))
+
+            self.assertEqual(rc, 0)
+            out = buf.getvalue()
+            self.assertIn("[adopt dry-run]", out)
+            self.assertIn("adopted entry moves", out)
+            self.assertIn("09-adopted-instructions.md", out)
+            self.assertEqual(
+                (target / "CLAUDE.md").read_text(encoding="utf-8"),
+                "legacy claude rule",
+            )
+            self.assertFalse((target / ".ai-context").exists())
+
+    def test_adopt_refuses_when_ai_context_has_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            (target / "CLAUDE.md").write_text("legacy claude rule", encoding="utf-8")
+            (target / ".ai-context").mkdir()
+            (target / ".ai-context" / "custom.md").write_text("existing", encoding="utf-8")
+
+            err = io.StringIO()
+            with redirect_stdout(io.StringIO()), redirect_stderr(err):
+                rc = init.main(_base_argv(target, ["--adopt"]))
+
+            self.assertEqual(rc, 2)
+            self.assertIn("--adopt cannot proceed", err.getvalue())
+            self.assertEqual(
+                (target / "CLAUDE.md").read_text(encoding="utf-8"),
+                "legacy claude rule",
+            )
+            self.assertFalse((target / ".ai-context" / "adopted-entry-backups").exists())
+
+    def test_adopt_without_existing_entries_falls_back_to_normal_init(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            err = io.StringIO()
+            with redirect_stdout(io.StringIO()), redirect_stderr(err):
+                rc = init.main(_base_argv(target, ["--adopt"]))
+
+            self.assertEqual(rc, 0)
+            self.assertIn("found no existing AI entry files", err.getvalue())
+            self.assertTrue((target / ".ai-context" / "00-overview.md").exists())
+            self.assertTrue((target / "CLAUDE.md").exists())
+            self.assertFalse((target / ".ai-context" / "09-adopted-instructions.md").exists())
+
+
 class TestMainPrintSnippets(unittest.TestCase):
     def test_print_snippets_prints_entries_without_writing_files(self):
         with tempfile.TemporaryDirectory() as d:
@@ -736,6 +858,26 @@ class TestArgValidation(unittest.TestCase):
             with redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit):
                     init.main(_base_argv(target, ["--print-snippets", "--merge"]))
+
+    def test_adopt_rejects_other_write_modes(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            for extra in (
+                ["--adopt", "--force"],
+                ["--adopt", "--merge"],
+                ["--adopt", "--print-snippets"],
+            ):
+                with self.subTest(extra=extra):
+                    with redirect_stderr(io.StringIO()):
+                        with self.assertRaises(SystemExit):
+                            init.main(_base_argv(target, extra))
+
+    def test_adopt_rejects_upgrade_mode(self):
+        with tempfile.TemporaryDirectory() as d:
+            target = Path(d)
+            with redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    init.main(["--target", str(target), "--upgrade", "--adopt"])
 
     def test_doctor_rejects_init_metadata(self):
         with tempfile.TemporaryDirectory() as d:

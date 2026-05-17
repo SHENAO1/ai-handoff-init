@@ -82,10 +82,11 @@ Interactive fallback: running `python scripts/init.py` with no args prompts for 
 
 ### Step 3 — Handle existing files and snippet-only output
 
-If the project already has `CLAUDE.md`, `AGENTS.md`, or `.github/copilot-instructions.md`:
+If the project already has `CLAUDE.md`, `AGENTS.md`, `AGENT.md`, or `.github/copilot-instructions.md`:
 
 - **Default**: script aborts and lists conflicts.
 - `--force`: overwrites, but creates `.bak-YYYYMMDD-HHMMSS` backups first.
+- `--adopt` (recommended when the user wants ai-handoff-init to take over existing entry files): imports old entry content into `.ai-context/09-adopted-instructions.md`, moves originals to `.ai-context/adopted-entry-backups/<timestamp>/`, writes fresh generated entry files, and records the operation in `05-current-state.md` / `06-session-log.md`.
 - `--merge` (recommended when user has hand-written entry files and no `.ai-context/` yet): creates only `.ai-context/` and prints the snippets the user needs to add to their existing entry files.
 - `--print-snippets` (recommended when `.ai-context/` already exists): renders and prints the `CLAUDE.md`, `AGENTS.md`, and `.github/copilot-instructions.md` snippets only. It writes no files, so it is the safe path when the target already has context files.
 - `--doctor` (recommended before changing an existing context): checks whether `.ai-context/` and entry files match the current protocol without writing files.

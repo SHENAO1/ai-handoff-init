@@ -103,6 +103,9 @@ python scripts/init.py [options]
                         Will NOT overwrite existing .ai-context/
   --merge               Only create .ai-context/, leave entry files alone
                         (prints snippets for you to paste manually)
+  --adopt               Import existing AI entry files into .ai-context/,
+                        move originals to .ai-context/adopted-entry-backups/,
+                        and write fresh generated entry files
   --print-snippets      Print rendered entry-file snippets only; write no files
   --dry-run             Show plan without writing files
   --doctor              Check an existing .ai-context/ without writing files
@@ -131,7 +134,10 @@ Upgrade mode creates `.bak-YYYYMMDD-HHMMSS` backups for files it changes and doe
 
 ## Existing projects and conflicts
 
-If your project already has `CLAUDE.md`, `AGENTS.md`, or `.github/copilot-instructions.md` but does **not** yet have `.ai-context/`, run with `--merge`. The script creates `.ai-context/` and prints the snippets you need to add to your existing entry files.
+If your project already has `CLAUDE.md`, `AGENTS.md`, `AGENT.md`, or `.github/copilot-instructions.md` but does **not** yet have `.ai-context/`, choose one of two safe paths:
+
+- Use `--adopt` when you want ai-handoff-init to take over the entry files while preserving the old instructions. The script imports the old content into `.ai-context/09-adopted-instructions.md`, moves the original files into `.ai-context/adopted-entry-backups/<timestamp>/`, writes fresh generated entry files, and records the operation in `05-current-state.md` / `06-session-log.md`.
+- Use `--merge` when you want a fully manual merge. The script creates `.ai-context/` and prints the snippets you need to add to your existing entry files.
 
 If your project already has `.ai-context/`, use `--print-snippets` instead. It only renders and prints the `CLAUDE.md`, `AGENTS.md`, and `.github/copilot-instructions.md` snippets. It does not create, overwrite, or back up any files.
 

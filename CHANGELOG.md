@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file. Format base
 
 ## [Unreleased]
 
+### Added
+- `--adopt` CLI mode for projects that already have AI assistant entry files: imports old `CLAUDE.md` / `AGENTS.md` / `AGENT.md` / Copilot instructions into `.ai-context/09-adopted-instructions.md`, moves originals to `.ai-context/adopted-entry-backups/<timestamp>/`, writes fresh generated entry files, and records the adoption in the handoff state/log.
+
 ## [0.3.0] — 2026-05-14
 
 ### Added

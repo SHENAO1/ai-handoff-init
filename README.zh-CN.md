@@ -139,6 +139,9 @@ python scripts/init.py [options]
                         不会覆盖已有 .ai-context/
   --merge               只创建 .ai-context/，不覆盖入口文件
                         会打印需要手动粘贴的片段
+  --adopt               收编已有 AI 入口文件到 .ai-context/，
+                        将旧文件移动到 .ai-context/adopted-entry-backups/，
+                        并写入新的标准入口文件
   --print-snippets      只渲染并打印入口文件片段，不写任何文件
   --dry-run             只展示计划，不写文件
   --doctor              只读检查已有 .ai-context/
@@ -187,7 +190,22 @@ python .\scripts\init.py --target E:\definitely-not-here-xyz --name demo --descr
 
 ## 已有项目与冲突处理
 
-如果项目里已经有 `CLAUDE.md`、`AGENTS.md` 或 `.github/copilot-instructions.md`，但还没有 `.ai-context/`，推荐使用 `--merge`：
+如果项目里已经有 `CLAUDE.md`、`AGENTS.md`、`AGENT.md` 或 `.github/copilot-instructions.md`，但还没有 `.ai-context/`，有两条安全路径。
+
+如果你希望 ai-handoff-init 接管入口文件，同时保留旧规则，推荐使用 `--adopt`：
+
+```bash
+python scripts/init.py --adopt ...
+```
+
+脚本会：
+
+- 把旧入口文件原文导入 `.ai-context/09-adopted-instructions.md`
+- 将旧入口文件移动到 `.ai-context/adopted-entry-backups/<timestamp>/`
+- 在原路径写入新的标准入口文件
+- 在 `05-current-state.md` 和 `06-session-log.md` 记录这次收编操作
+
+如果你希望完全手动融合，使用 `--merge`：
 
 ```bash
 python scripts/init.py --merge ...
